@@ -101,7 +101,22 @@ function bubble(x,y,s){
 
 /* ---------- audio ---------- */
 let AC=null,muted=false;
-function audio(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume()}
+// iPhone mutes Web Audio when the silent switch is on; a looping silent <audio> element plus
+// audioSession 'playback' moves the page into the media category so the music plays anyway.
+let unlockEl=null;
+function silentWav(){const n=800,b=new Uint8Array(44+n),v=new DataView(b.buffer),w=(o,s)=>{for(let i=0;i<s.length;i++)b[o+i]=s.charCodeAt(i)};
+  w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);b.fill(128,44);
+  let s='';b.forEach(c=>s+=String.fromCharCode(c));return 'data:audio/wav;base64,'+btoa(s)}
+function audio(){
+  try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+  if(!unlockEl){unlockEl=new Audio(silentWav());unlockEl.loop=true;unlockEl.setAttribute('playsinline','')}
+  if(unlockEl.paused){const p=unlockEl.play();if(p&&p.catch)p.catch(()=>{})}
+  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}
+  if(AC){if(AC.state!=='running')AC.resume().catch(()=>{});
+    try{const s=AC.createBufferSource();s.buffer=AC.createBuffer(1,1,22050);s.connect(AC.destination);s.start(0)}catch(e){}}
+}
+['pointerdown','touchend','click','keydown'].forEach(n=>addEventListener(n,audio,{passive:true}));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&AC&&AC.state!=='running')AC.resume().catch(()=>{})});
 function beep(f,d=.1,type='square',v=.04,slide=0){if(muted||!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,AC.currentTime);if(slide)o.frequency.exponentialRampToValueAtTime(f*slide,AC.currentTime+d);g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g).connect(AC.destination);o.start();o.stop(AC.currentTime+d+.02)}
 const sfx={jump:()=>beep(440,.14,'square',.035,1.8),coin:()=>{beep(988,.07);setTimeout(()=>beep(1319,.12),60)},hurt:()=>beep(220,.3,'sawtooth',.05,.4),stomp:()=>beep(300,.15,'square',.05,.5),power:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.12,'triangle',.05),i*70))},win:()=>{[523,659,784,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.16,'triangle',.06),i*120))}};
 document.getElementById('mute').onclick=e=>{muted=!muted;e.target.textContent=muted?'SOM: OFF':'SOM: ON';e.target.blur()};
@@ -149,7 +164,7 @@ function tickMusic(){
 /* ---------- content ---------- */
 const PH=[
  {name:'Fuga do Japão',bg:'tokyo',dur:38,speed:330,gap:[.95,1.6],cur:'¥',
-  mission:'Corra para o aeroporto! A amiga quer ir na sua casa de qualquer jeito: desvie ou pule por cima dela. Pegue moedas, onigiris e corações.',
+  mission:'Corra para o aeroporto! Tem alguém querendo que você fique no Japão de qualquer jeito: desvie ou pule por cima. Pegue moedas, onigiris e corações.',
   done:'Check-in feito! ✈️ Umas 30 horas de voo depois...',
   spawns:[['amiga',3],['bike',1.6],['coins',3],['onigiri',1],['heart',.4]],goal:'airport'},
  {name:'Bem-vinda ao Brasil',bg:'brasil',dur:42,speed:350,gap:[.9,1.5],cur:'R$',
@@ -165,11 +180,11 @@ const PH=[
   done:'Festa garantida! E a cirurgia? SUCESSO! ✨ Lola 2.0 desbloqueada.',
   spawns:[['vermelho',2],['selecao',2],['som',1],['festa',4],['heart',.5]],goal:'festa'},
  {name:'Lola 2.0 e o Dragão',bg:'ceu',dur:45,speed:400,gap:[.6,1.05],cur:'R$',chest:true,
-  mission:'Todo mundo voltou ao mesmo tempo: amiga, mãe, boys, enfermeiras e fanáticos! Sobreviva até o dragão chegar e monte nele.',
+  mission:'Todo mundo voltou ao mesmo tempo: quem queria que você ficasse, mãe, boys, enfermeiras e fanáticos! Sobreviva até o dragão chegar e monte nele.',
   spawns:[['amiga',1],['mae',1],['boy',1],['enfermeira',1],['vermelho',1],['selecao',1],['bike',.5],['coins',2.2],['heart',.8]],goal:'dragao'}
 ];
 const DEF={
- amiga:{k:'walker',h:88,extra:70,skin:'#8d5a3b',hair:'#2b1a12',hs:'curly',shirt:'#f2a541',pants:'#4b3f72',acc:'gift',lines:['Lola, vou aí!','Abre a porta!','Cheguei, amiga!','Só um café!']},
+ amiga:{k:'walker',h:88,extra:70,skin:'#8d5a3b',hair:'#2b1a12',hs:'curly',shirt:'#f2a541',pants:'#4b3f72',acc:'gift',lines:['Fica, Lola!','Não vai embora!','Fica mais um pouco!','Volta aqui!']},
  mae:{k:'thrower',proj:'prato',h:86,extra:25,skin:'#e3b48c',hair:'#8a7a70',hs:'bun',shirt:'#c0397a',pants:'#3b3355',acc:'spoon',apron:true,lines:['Come mais, filha!','Tá magrinha!','Só mais um prato!','Tem feijoada!']},
  boy:{k:'thrower',proj:'dm',h:94,extra:45,skin:'#d9a37a',hair:'#1d1d1d',hs:'short',shirt:'#3a86ff',pants:'#22223b',acc:'phone',lines:['Oi sumida','Bora um açaí?','Deu match! 🔥','Tá solteira?','Manda foto?']},
  enfermeira:{k:'thrower',proj:'seringa',h:90,extra:30,skin:'#f0c7a4',hair:'#6b3e26',hs:'cap',shirt:'#7fd1c3',pants:'#7fd1c3',acc:'syringe',lines:['Cadê a veia?','Só uma picadinha...','Ops, veia errada!','Relaxa, é rapidinho!']},
