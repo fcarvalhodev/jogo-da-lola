@@ -250,12 +250,18 @@ function drawLola(x,y,o){
   const sw=Math.sin(o.t*10)*2.5;
   ctx.fillStyle=hg;ctx.beginPath();ctx.moveTo(-8,-71);ctx.quadraticCurveTo(-30,-60,-27+sw,-28);ctx.quadraticCurveTo(-18,-34,-14+sw,-26);ctx.quadraticCurveTo(-6,-38,-1,-46);ctx.quadraticCurveTo(10,-62,-8,-71);ctx.fill();
   ctx.strokeStyle='#d24bff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-14,-52);ctx.quadraticCurveTo(-22,-42,-22+sw,-32);ctx.stroke();
-  if(!o.sit){ctx.strokeStyle=skin;ctx.lineWidth=7;seg(-5,-22,-5-run*8,-4);seg(5,-22,5+run*8,-4);dot(-5-run*8,-3,4.5,'#ff4fa0');dot(5+run*8,-3,4.5,'#ff4fa0')}
-  rr(-11,-30,22,11,4,'#3d5a9e');
+  if(!o.sit){ctx.strokeStyle='#1a1720';ctx.lineWidth=7;seg(-5,-22,-5-run*8,-4);seg(5,-22,5+run*8,-4);
+    rr(-10-run*8,-9,10,8,3,'#0d0c10');rr(0+run*8,-9,10,8,3,'#0d0c10');ctx.fillStyle='#c4142f';ctx.fillRect(-9-run*8,-8,8,1.5);ctx.fillRect(1+run*8,-8,8,1.5)}
+  // red plaid skirt
+  ctx.fillStyle='#b3122e';ctx.beginPath();ctx.moveTo(-10,-31);ctx.lineTo(10,-31);ctx.lineTo(14,-18);ctx.lineTo(-14,-18);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.55)';ctx.lineWidth=1.5;seg(-4,-31,-6,-18);seg(4,-31,6,-18);seg(-12,-24,12,-24);
   // back arm
   ctx.strokeStyle=skin;ctx.lineWidth=6;seg(-8,-42,-12-run*6,-28);
-  rr(-11,-47,22,19,7,'#2ec4b6');
-  if(o.chest){dot(-4.5,-39,7,'#22a99c');dot(5.5,-39,7,'#22a99c');dot(-6.5,-41.5,1.8,'#c9fff8');dot(3.5,-41.5,1.8,'#c9fff8')}
+  // black and red gothic tee
+  rr(-11,-47,22,19,7,'#17141c');ctx.fillStyle='#c4142f';ctx.fillRect(-11,-31,22,3);ctx.fillRect(-11,-46,4,10);
+  if(o.chest){dot(-4.5,-39,7,'#1f1b26');dot(5.5,-39,7,'#1f1b26');dot(-6.5,-41.5,1.8,'#ff3b5c');dot(3.5,-41.5,1.8,'#ff3b5c')}
+  else heart(2,-38,.42,'#c4142f');
+  ctx.strokeStyle='#0d0c10';ctx.lineWidth=2.5;seg(-5,-47.5,7,-47.5);dot(1,-46.5,1.6,'#c4142f');
   // front arm
   ctx.strokeStyle=skin;ctx.lineWidth=6;
   if(o.wave)seg(8,-43,17,-62+Math.sin(o.t*14)*4);else seg(8,-43,13+run*6,-29);
@@ -264,7 +270,8 @@ function drawLola(x,y,o){
   ctx.fillStyle='#ffe27a';ctx.beginPath();ctx.arc(0,-59,12.5,Math.PI*.95,Math.PI*2.05);ctx.quadraticCurveTo(10,-56,4,-61);ctx.quadraticCurveTo(-4,-55,-12,-56);ctx.fill();
   ctx.lineWidth=3.5;ctx.strokeStyle='#b03dff';seg(-8,-68,-5,-60);seg(4,-70,8,-62);ctx.strokeStyle='#ff4fb8';seg(-2,-70,1,-62);
   dot(6,-56,1.9,'#2a1a3a');dot(8,-52,2.6,'rgba(255,110,150,.45)');
-  ctx.strokeStyle='#7a2a3a';ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(5,-52,3,.2,Math.PI*.8);ctx.stroke();
+  ctx.strokeStyle='#9c0f2a';ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(5,-52,3,.2,Math.PI*.8);ctx.stroke();
+  ctx.strokeStyle='#1a1720';ctx.lineWidth=1.2;seg(4,-58.5,8.5,-59.5);
   ctx.restore();
 }
 function drawPerson(e,t){
@@ -450,6 +457,10 @@ function render(){
     drawDragon(bx,by,1.5,T);drawRiders(bx-6,by-42,1.5,T,true);
   } else if(state==='intro'){
     drawBg('tokyo',T);
+    ctx.save();ctx.translate(W/2,96+Math.sin(T*2)*4);
+    ctx.strokeStyle='#ddd';ctx.lineWidth=2;seg(-300,-30,-290,0);seg(300,-30,290,0);
+    rr(-300,-26,600,56,14,'#c4142f');rr(-292,-20,584,44,10,'#17141c');
+    txt('FELIZ ANIVERSÁRIO, LOLA!',0,3,30,'#ffd34e','center','Bungee',400);ctx.restore();
     const fr=[{x:430,d:DEF.amiga,say:'Tchau, Lola!'},{x:540,d:{...DEF.boy,shirt:'#06d6a0',skin:'#f1c9a5',hair:'#111',hs:'short'},say:'Boa viagem!'},{x:650,d:{...DEF.amiga,skin:'#f0c7a4',hair:'#7b3f1f',hs:'bun',shirt:'#b48cff'},say:'Traz brigadeiro!'}];
     fr.forEach((f,i)=>drawPerson({x:f.x,y:GROUND,d:f.d,still:true,wave:true,seed:i,say:stateT>0.4+i*.5?f.say:null,sayT:1},T+i));
     drawLola(P.x+80,GROUND,{t:T,wave:true});
@@ -482,7 +493,7 @@ const KEYS=TOUCH?'Toque em <strong>PULAR</strong> (duas vezes = pulo duplo) e se
 let panelAction=null;
 function showPanel(html,btn,action,cls=''){panel.className='panel '+cls;panel.innerHTML=`<div class="card">${html}<button class="go" id="goBtn" type="button">${btn}</button></div>`;panel.hidden=false;panelAction=action;const b=document.getElementById('goBtn');b.onclick=()=>{audio();action()};setTimeout(()=>b.focus({preventScroll:true}),50)}
 function hidePanel(){panel.hidden=true;panelAction=null}
-function showTitle(){state='title';showPanel(`<div class="eyebrow">Um jogo de aniversário em 5 fases</div><h1>A Saga da Lola</h1><p>Do Japão até o dragão. Heroína com <strong>1,50 m</strong> de altura: ótima pra passar por baixo das coisas.</p><p class="keys">${KEYS}</p>`,'JOGAR',()=>{score=0;hearts=3;state='intro';stateT=0;hidePanel();playSong('p0')});if(!music)playSong('title')}
+function showTitle(){state='title';showPanel(`<p class="msg">🎂 Feliz aniversário, Lola! 🎂</p><div class="eyebrow">Um jogo de aniversário em 5 fases</div><h1>A Saga da Lola</h1><p>Do Japão até o dragão. Heroína com <strong>1,50 m</strong> de altura: ótima pra passar por baixo das coisas.</p><p class="keys">${KEYS}</p>`,'JOGAR',()=>{score=0;hearts=3;state='intro';stateT=0;hidePanel();playSong('p0')});if(!music)playSong('title')}
 function showMission(i){
   state='card';const ph=PH[i];
   showPanel(`<div class="eyebrow">Fase ${i+1} de 5 · Missão</div><h2>${ph.name}</h2><p>${ph.mission}</p>${i===0?`<p class="keys">${KEYS}</p>`:''}`,'COMEÇAR',()=>startPhase(i));
